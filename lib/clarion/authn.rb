@@ -9,9 +9,14 @@ module Clarion
     class << self
       def make(**kwargs)
         kwargs.delete(:id)
+        kwargs.delete(:created_at)
+        kwargs.delete(:status)
+        kwargs.delete(:verified_at)
+        kwargs.delete(:verified_key)
         new(
           id: random_id,
           created_at: Time.now,
+          status: :open,
           **kwargs,
         )
       end
