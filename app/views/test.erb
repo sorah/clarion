@@ -1,0 +1,35 @@
+<form action="<%= @register_url %>" method="POST">
+  <input type="hidden" name="name" value="<%= @name %>">
+  <input type="hidden" name="comment" value="<%= @comment %>">
+  <input type="hidden" name="state" value="<%= @state%>">
+  <input type="hidden" name="callback" value="<%= @callback %>">
+  <input type="hidden" name="public_key" value="<%= @public_key %>">
+  <input type="submit" value="Register (POST)">
+</form>
+
+<form id="callback_form" class="hidden" method='POST' action="/test/callback">
+  <input type="hidden" name="state" value="">
+  <input type="hidden" name="data" value="">
+</form>
+
+<button id="register_cb_button" data-url="/register?<%= URI.encode_www_form(name: @name, comment: @comment, state: @state, callback: "js:#{request.base_url}", public_key: @public_key)%>">Register (JS callback)</button>
+<script>
+"use strict";
+document.addEventListener("DOMContentLoaded", function() {
+  window.addEventListener("message", function(event) {
+    console.log(event.data);
+    if (event.data.clarion_key) {
+      let data = event.data.clarion_key;
+      let form = document.getElementById("callback_form");
+      form.querySelector('[name=state]').value = data.state;
+      form.querySelector('[name=data]').value = data.data;
+      form.submit();
+    }
+  }, false);
+
+  let button = document.getElementById("register_cb_button");
+  button.addEventListener("click", function() {
+    window.open(button.attributes['data-url'].value, '_blank');
+  });
+});
+</script>

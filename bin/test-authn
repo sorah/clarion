@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+require 'net/http'
+require 'net/https'
+require 'uri'
+
+base = ARGV[0]
+unless base
+  abort "Usage: #{$0} url"
+end
+
+
