@@ -127,11 +127,13 @@ module Clarion
       @reg_id = SecureRandom.urlsafe_base64(12)
       registrator = Registrator.new(u2f, counter)
       @app_id, @requests = registrator.request
-      session[:regs] ||= {}
-      session[:regs][@reg_id] = {
+      session[:regis] ||= []
+      session[:regis] << {
+        id: @reg_id,
         challenges: @requests.map(&:challenge),
         key: public_key.to_der,
       }
+      session[:regis].shift(session[:regis].size - 4) if session[:regis].size > 4
 
       @callback = params[:callback]
       @state = params[:state]
@@ -150,8 +152,8 @@ module Clarion
         halt 400, '{"error": "Missing params"}'
       end
 
-      session[:regs] ||= {}
-      reg = session[:regs][data[:reg_id]]
+      session[:regis] ||= []
+      reg = session[:regis].find { |_| _[:id] == data[:reg_id] }
       unless reg && reg[:challenges] && reg[:key]
         halt 400, '{"error": "Invalid :reg"}'
       end
@@ -166,7 +168,7 @@ module Clarion
       key = registrator.register!(reg[:challenges], data[:response])
       key.name = data[:name]
 
-      session[:regs].delete(data[:reg_id])
+      session[:regis].reject! { |_| _[:id] == data[:reg_id] }
 
       {ok: true, encrypted_key: key.to_encrypted_json(public_key, :all)}.to_json
     end
