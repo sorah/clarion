@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     let processCallback = (json) => {
       processionElem.className = 'procession_ok';
+      if (window.opener) window.close();
     }
 
     let cb = (response) => {
