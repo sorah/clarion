@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let state = processionElem.attributes['data-state'].value;
     let callbackUrl = processionElem.attributes['data-callback'].value;
 
+    var u2fResponse;
 
     let processCallback = (json) => {
       processionElem.className = 'procession_ok';
@@ -37,18 +38,13 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     }
 
-    let cb = (response) => {
-      console.log(response);
-
-      if (response.errorCode) {
-        processionElem.className = 'procession_error';
-        return;
-      }
+    let submitKey = () => {
       processionElem.className = 'procession_contact';
 
       let payload = JSON.stringify({
         reg_id: regId,
-        response: JSON.stringify(response),
+        response: JSON.stringify(u2fResponse),
+        name: document.getElementById("key_name").value,
       });
 
       let handleError = (err) => {
@@ -72,10 +68,26 @@ document.addEventListener("DOMContentLoaded", function() {
         });
       }).catch(handleError);
     };
+    document.getElementById("key_name_form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (u2fResponse) submitKey();
+    });
+
+    let u2fCallback = (response) => {
+      console.log(response);
+
+      if (response.errorCode) {
+        processionElem.className = 'procession_error';
+        return;
+      }
+      u2fResponse = response;
+      processionElem.className = 'procession_edit';
+      document.getElementById("key_name").focus();
+    };
 
     processionElem.className = 'procession_wait';
     console.log(requests);
-    window.u2f.register(appId, requests, [], cb, 300000);
+    window.u2f.register(appId, requests, [], u2fCallback, 300000);
   });
 
 

@@ -164,6 +164,7 @@ module Clarion
 
       registrator = Registrator.new(u2f, counter)
       key = registrator.register!(reg[:challenges], data[:response])
+      key.name = data[:name]
 
       session[:regs].delete(data[:reg_id])
 

@@ -11,6 +11,9 @@
   #procession.procession_wait > div.procession_wait {
     display: block;
   }
+  #procession.procession_edit > div.procession_edit {
+    display: block;
+  }
   #procession.procession_contact > div.procession_contact {
     display: block;
   }
@@ -36,6 +39,13 @@
   </div>
   <div class="procession_wait">
     <p>Insert and tap your security key.</p>
+  </div>
+  <div class="procession_edit">
+    <p>Security key recognized:</p>
+    <form id="key_name_form">
+      <p><input type="text" id="key_name" placeholder="Name your key" required></p>
+      <p><input type="submit" value="Save"></p>
+    </form>
   </div>
   <div class="procession_contact">
     <p>Contacting...</p>

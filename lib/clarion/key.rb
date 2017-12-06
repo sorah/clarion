@@ -33,8 +33,8 @@ module Clarion
       @counter = counter
     end
 
-    attr_reader :handle, :name, :public_key
-    attr_accessor :counter
+    attr_reader :handle, :public_key
+    attr_accessor :counter, :name
 
     def to_h(all=false)
       {
