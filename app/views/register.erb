@@ -23,6 +23,9 @@
   #procession.procession_error > div.procession_error {
     display: block;
   }
+  #procession.procession_timeout > div.procession_timeout {
+    display: block;
+  }
 </style>
 
 <p><strong>U2F key registration<%- if @name -%> for <%= @name %><%- end -%></strong></p>
@@ -56,7 +59,12 @@
   <div class="procession_error">
     <p>Error: try again from the previous page?</p>
   </div>
+  <div class="procession_timeout">
+    <p>Timed out...</p>
+    <p><button id="retry_button">Try again</button></p>
+  </div>
 </div>
+
 <%- if @comment -%>
 <p><small><%= @comment %></small></p>
 <%- end -%>

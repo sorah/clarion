@@ -20,6 +20,10 @@
   #procession.procession_error > div.procession_error {
     display: block;
   }
+  #procession.procession_timeout > div.procession_timeout {
+    display: block;
+  }
+
 </style>
 
 <p class='center'><strong>U2F 2FA <%- if @authn.name -%> for <%= @authn.name %><%- end -%></strong></p>
@@ -41,6 +45,10 @@
   </div>
   <div class="procession_error">
     <p>Error: Reload and try again?</p>
+  </div>
+  <div class="procession_timeout">
+    <p>Timed out...</p>
+    <p><button id="retry_button">Try again</button></p>
   </div>
 </div>
 <%- if @authn.comment -%>

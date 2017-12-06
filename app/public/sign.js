@@ -26,7 +26,10 @@ document.addEventListener("DOMContentLoaded", function() {
     let cb = (response) => {
       console.log(response);
 
-      if (response.errorCode) {
+      if (response.errorCode == window.u2f.ErrorCodes.TIMEOUT) {
+        processionElem.className = 'procession_timeout';
+        return;
+      } else if (response.errorCode) {
         processionElem.className = 'procession_error';
         return;
       }
@@ -59,8 +62,14 @@ document.addEventListener("DOMContentLoaded", function() {
       }).catch(handleError);
     };
 
-    processionElem.className = 'procession_wait';
-    window.u2f.sign(appId, challenge, requests, cb, 300000);
+    let startRequest = () => {
+      processionElem.className = 'procession_wait';
+      window.u2f.sign(appId, challenge, requests, cb);
+    };
+    document.getElementById("retry_button").addEventListener("click", (e) => {
+      startRequest();
+    });
+    startRequest();
   });
 
 
