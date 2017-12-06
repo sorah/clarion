@@ -170,7 +170,7 @@ module Clarion
 
       session[:regis].reject! { |_| _[:id] == data[:reg_id] }
 
-      {ok: true, encrypted_key: key.to_encrypted_json(public_key, :all)}.to_json
+      {ok: true, name: key.name, encrypted_key: key.to_encrypted_json(public_key, :all)}.to_json
     end
 
     post '/ui/verify/:id' do

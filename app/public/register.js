@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", function() {
           processionElem.className = 'procession_error';
           return;
         }
-        window.opener.postMessage({clarion_key: {state: state, data: json.encrypted_key}}, callbackUrl.slice(3));
+        window.opener.postMessage({clarion_key: {state: state, name: json.name, data: json.encrypted_key}}, callbackUrl.slice(3));
         window.close();
       } else {
         let form = document.getElementById("callback_form");
