@@ -114,8 +114,14 @@ module Clarion
       unless params[:name] && params[:callback] && params[:public_key]
         halt 400, 'missing params'
       end
-      if params[:callback].start_with?('js:') && !(conf.registration_allowed_url === params[:callback])
-        halt 400, 'invalid callback'
+      if params[:callback].start_with?('js:')
+        unless conf.registration_allowed_url === params[:callback][3..-1]
+          halt 400, 'invalid callback'
+        end
+      else
+        unless conf.registration_allowed_url === params[:callback]
+          halt 400, 'invalid callback'
+        end
       end
 
       public_key = begin
