@@ -1,5 +1,7 @@
 # Clarion: Web-based FIDO U2F helper for CLI operations (e.g. SSH Log in)
 
+![](https://img.sorah.jp/s/ssh-u2f.gif)
+
 Clarion is a web-based frontend to allow remote,non-browser operations (CLI) to perform 2FA on their users.
 
 ## How it works
