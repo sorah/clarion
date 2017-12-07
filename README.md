@@ -36,7 +36,7 @@ See [config.ru](./config.ru) for detailed configuration. The following environme
 
 ### Real world example: SSH log in
 
-TBD
+See [./examples/pam-u2f](./examples/pam-u2f)
 
 ### Test implementation
 
