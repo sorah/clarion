@@ -42,7 +42,7 @@ TBD
 
 Visit `/test` exists in your application. This endpoint doesn't work for multi-process/multi-threaded deployment.
 
-See [app/public/test.erb](./app/public/test.erb), [app/public/test_callback.erb](./app/public/test_callback.erb), [app/public/test.js](./app/public/test.erb) for implementation.
+See [app/views/test.erb](./app/views/test.erb), [app/views/test_callback.erb](./app/views/test_callback.erb), [app/public/test.js](./app/public/test.js) for implementation.
 
 ### API
 
