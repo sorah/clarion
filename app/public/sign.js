@@ -18,6 +18,34 @@ document.addEventListener("DOMContentLoaded", function() {
     let requests = JSON.parse(processionElem.attributes['data-requests'].value);
     let challenge = JSON.parse(processionElem.attributes['data-challenge'].value);
 
+    let requestCancel  = (e) => {
+      if (e) e.preventDefault();
+      let payload = JSON.stringify({
+        req_id: reqId,
+      });
+
+      let handleError = (err) => {
+        console.log(err);
+        processionElem.className = 'procession_error';
+      };
+
+      fetch(`/ui/cancel/${authnId}`, {credentials: 'include', method: 'POST', body: payload}).then((resp) => {
+        console.log(resp);
+        if (!resp.ok) {
+          processionElem.className = 'procession_error';
+          return;
+        }
+        return resp.json().then((json) => {
+          console.log(json);
+          if (json.ok) {
+            processionElem.className = 'procession_cancel';
+          } else {
+            processionElem.className = 'procession_error';
+          }
+        });
+      }).catch(handleError);
+    };
+    document.getElementById("cancel_link").addEventListener("click", requestCancel);
 
     let processCallback = (json) => {
       processionElem.className = 'procession_ok';

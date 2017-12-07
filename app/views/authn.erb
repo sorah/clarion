@@ -23,6 +23,9 @@
   #procession.procession_error > div.procession_error {
     display: block;
   }
+  #procession.procession_cancel > div.procession_cancel {
+    display: block;
+  }
   #procession.procession_timeout > div.procession_timeout {
     display: block;
   }
@@ -53,9 +56,15 @@
   <div class="procession_error">
     <p>Error: Reload and try again?</p>
   </div>
+  <div class="procession_cancel">
+    <p>Cancelled: You may now close this page.</p>
+  </div>
   <div class="procession_timeout">
     <p>Timed out...</p>
     <p><button id="retry_button">Try again</button></p>
+  </div>
+  <div class="procession_unsupported procession_error procession_wait procession_timeout">
+    <p class='text-muted right'><a href='#' id="cancel_link"><small>Cancel</small></a></p>
   </div>
 </div>
 

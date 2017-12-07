@@ -4,7 +4,7 @@ require 'clarion/key'
 
 module Clarion
   class Authn
-    STATUSES = %i(open verified)
+    STATUSES = %i(open cancelled verified)
 
     class << self
       def make(**kwargs)
@@ -63,6 +63,14 @@ module Clarion
       status == :verified
     end
 
+    def cancelled?
+      status == :cancelled
+    end
+
+    def closed?
+      !open? || expired? 
+    end
+
     def key_for_handle(handle)
       keys.find { |_| _.handle == handle }
     end
@@ -74,6 +82,11 @@ module Clarion
       @verified_at = verified_at
       @verified_key = key
       @status = :verified
+      true
+    end
+
+    def cancel!
+      @status = :cancelled
       true
     end
 

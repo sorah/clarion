@@ -90,13 +90,12 @@ module Clarion
       unless @authn
         halt 404, "authn not found"
       end
-      if @authn.verified?
-        halt 410, "Authn already processed"
-      end
       if @authn.expired?
         halt 410, "Authn expired"
       end
-
+      if @authn.closed?
+        halt 410, "Authn already processed"
+      end
 
       authenticator = Authenticator.new(@authn, u2f, counter, store)
       @app_id, @requests, @challenge = authenticator.request
@@ -179,6 +178,38 @@ module Clarion
       {ok: true, name: key.name, encrypted_key: key.to_encrypted_json(public_key, :all)}.to_json
     end
 
+    post '/ui/cancel/:id' do
+      content_type :json
+      unless data[:req_id]
+        halt 400, '{"error": "missing params"}'
+      end
+      session[:reqs] ||= {}
+      unless session[:reqs][data[:req_id]]
+        halt 400, '{"error": "invalid :req_id"}'
+      end
+      challenge = session[:reqs][data[:req_id]][:challenge]
+      unless challenge
+        halt 400, '{"error": "invalid :req_id"}'
+      end
+
+      @authn = store.find_authn(params[:id])
+      unless @authn
+        halt 404, '{"error": "authn not found"}'
+      end
+      if @authn.expired?
+        halt 410, '{"error": "authn expired"}'
+      end
+      if @authn.closed?
+        halt 410, '{"error": "authn already processed"}'
+      end
+
+      @authn.cancel!
+      store.store_authn(@authn)
+      session[:reqs].delete data[:req_id]
+
+      '{"ok": true}'
+    end
+
     post '/ui/verify/:id' do
       content_type :json
       unless data[:req_id] && data[:response]
@@ -197,11 +228,11 @@ module Clarion
       unless @authn
         halt 404, '{"error": "authn not found"}'
       end
-      if @authn.verified?
-        halt 410, '{"error": "authn already processed"}'
-      end
       if @authn.expired?
         halt 410, '{"error": "authn expired"}'
+      end
+      if @authn.closed?
+        halt 410, '{"error": "authn already processed"}'
       end
 
       authenticator = Authenticator.new(@authn, u2f, counter, store)
