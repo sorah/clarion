@@ -2,6 +2,9 @@
   #procession > div {
     display: none;
   }
+  #procession > div.procession_always {
+    display: block;
+  }
   #procession.procession_init > div.procession_init {
     display: block;
   }
@@ -26,7 +29,11 @@
 
 </style>
 
-<p class='center'><strong>U2F 2FA <%- if @authn.name -%> for <%= @authn.name %><%- end -%></strong></p>
+<p class='center'><strong>U2F 2FA <%- if @authn.name -%> for <%= @authn.name %><%- end -%></strong><br>
+<%- if @authn.comment -%>
+<small><%= @authn.comment %></small></p>
+<%- end -%>
+</p>
 <div id="procession" class="procession_init" data-authn-id="<%= @authn.id %>" data-app-id="<%= @app_id %>" data-requests='<%= @requests.to_json %>' data-challenge='<%= @challenge.to_json %>' data-req-id='<%= @req_id %>'>
   <div class="procession_init">
     <p>Initializing...</p>
@@ -51,9 +58,6 @@
     <p><button id="retry_button">Try again</button></p>
   </div>
 </div>
-<%- if @authn.comment -%>
-<p><small><%= @authn.comment %></small></p>
-<%- end -%>
 
 
 <script src="/sign.js"></script>
