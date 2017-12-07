@@ -4,7 +4,7 @@ require 'clarion/key'
 
 module Clarion
   class Authn
-    STATUSES = %i(open cancelled verified)
+    STATUSES = %i(open cancelled verified expired)
 
     class << self
       def make(**kwargs)
@@ -40,6 +40,8 @@ module Clarion
       @created_at = Time.xmlschema(@created_at) if @created_at && @created_at.is_a?(String)
       @expires_at = Time.xmlschema(@expires_at) if @expires_at && @expires_at.is_a?(String)
       @verified_at = Time.xmlschema(@verified_at) if @verified_at && @verified_at.is_a?(String)
+
+      @status = :expired if expired?
 
       raise ArgumentError, ":status not valid" unless STATUSES.include?(@status)
     end
