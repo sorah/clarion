@@ -21,21 +21,31 @@ application/json
 
 ``` json
 {
-  "name": "USERNAME",
-  "comment": "COMMENT",
+  "name": "alice",
+  "comment": "SSH logging in",
   "keys": [
     {
+      "name": "my security key",
       "handle": "KEYHANDLE",
       "public_key": "PUBLICKEY",
-      "counter": COUNTER
+      "counter": 42
     }
   ]
 }
 ```
 
+- `name` (optional): used for consenting user
+- `comment` (optional): used for consenting user
+- keys: array of _key_ objects, which is retrievable by `/register` API
+  - `name` (optional)
+  - `handle` (required)
+  - `public_key` (required)
+  - `counter` (optional)
+
+
 ### Response
 
-Same with /api/authn/:id
+Same with `/api/authn/:id`
 
 ## GET `/api/authn/:id` (Check authentication result)
 
@@ -48,20 +58,32 @@ Same with /api/authn/:id
 ``` json
 {
   "authn": {
-    "id": "AUTHN_ID",
-    "expires_at": "EXPIRY",
-    "html_url": "HTML_URL",
-    "url": "API_URL",
-    "status": "STATUS",
-    "verified_at": "VERIFIED_AT",
+    "id": "bwsyJySllmJpFeIV4VuSPg9xO9Bdky905i48K1kA02Yd8l6C7-l4GlvPA8icYPLPxG4xkp9ePUp_3Onsemc",
+    "status": "open",
+    "html_url": "https://example.org/authn/bwsyJySllmJpFeIV4VuSPg9xO9Bdky905i48K1kA02Yd8l6C7-l4GlvPA8icYPLPxG4xkp9ePUp_3Onsemc",
+    "url": "https://example.org/api/authn/bwsyJySllmJpFeIV4VuSPg9xO9Bdky905i48K1kA02Yd8l6C7-l4GlvPA8icYPLPxG4xkp9ePUp_3Onsemc",
+    "created_at": "2017-12-08T01:14:41+09:00",
+    "expires_at": "2017-12-08T01:16:41+09:00",
+    "verified_at": "2017-12-08T01:15:41+09:00",
     "verified_key": {
+      "name": "my security key",
       "handle": "KEYHANDLE",
       "public_key": "PUBLICKEY",
-      "counter": COUNTER
+      "counter": 43
     }
   }
 }
 ```
+
+- `id`: authn ID
+- `status`: One of = `open`, `verified`, `expired`, or `cancelled`
+- `html_url`: URL of authentication page for user
+- `url`: API URL to retrieve the latest authn status (`/api/authn/:id`)
+- `created_at`: Creation time of authn, format is ISO8601
+- `expires_at`: Expiration time of authn, format is ISO8601
+- (only available when `status == "verified"`)
+  - `verified_at` : verification time of authn, format is ISO8601.
+  - `verified_key` : a _key_ object, user presented.
 
 ## GET/POST `/register` (Security Key Registration page)
 
@@ -75,7 +97,13 @@ form encoded body on POST, or query string on GET
 name=NAME&comment=COMMENT&state=STATE&callback=CALLBACK&public_key=PUBKEY
 ```
 
-CALLBACK may start with `js:`, when `js:$ORIGIN` (where `$ORIGIN` is a page origin) is specified, `/register` page will return a result using [window.opener.postMessage()](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage).
+- `NAME` (optional): Used for consenting user
+- `COMMENT` (optional): Used for consenting user
+- `STATE` (optional): if given, the same string will be returned in a callback
+- `CALLBACK` (required): Callback URL
+  - may start with `js:`: When `js:$ORIGIN` (where `$ORIGIN` is a page origin) is specified, `/register` page will return a result using [window.opener.postMessage()](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage).
+  - Returned message is a JavaScript object contains a property `clarion_key`. It is a JavaScript object in the same format of POST callback.
+- `PUBKEY` (required): RSA public key, in a Base64 encoded DER string.
 
 ### Response
 
@@ -94,8 +122,8 @@ state=STATE&data=DATA
 ```
 
 - `DATA` is a JSON string `{"data": "ENCRYPT_DATA_BASE64", "key": "ENCRYPTED_SHARED_KEY_BASE64"}`.
-  - `ENCRYPTED_SHARED_KEY_BASE64` contains base64 encoded binary, which is a encrypted JSON string using the given RSA public key to `/register`.
-    - it's decrypted like as `{"iv": "IV_BASE64", "tag": "TAG_BASE64", "key": "KEY_BASE64"}`.
+  - `ENCRYPTED_SHARED_KEY_BASE64` contains base64 encoded binary, which is a RSA encrypted JSON string using the given RSA public key to `/register`. RSA padding mode is `PKCS1_OAEP_PADDING`.
+    - it decrypts like as `{"iv": "IV_BASE64", "tag": "TAG_BASE64", "key": "KEY_BASE64"}`.
     - `IV_BASE64` is a base64 encoded IV.
     - `TAG_BASE64` is a AES-GCM auth tag.
     - `KEY_BASE64` is a base64 encoded shared key used for AES-256-GCM.
