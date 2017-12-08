@@ -21,6 +21,7 @@ end
 config = {
   registration_allowed_url: Regexp.new(ENV.fetch('CLARION_REGISTRATION_ALLOWED_URL')),
   authn_default_expires_in: ENV.fetch('CLARION_AUTHN_DEFAULT_EXPIRES_IN', 300).to_i,
+  app_id: ENV['CLARION_APP_ID'],
 }
 
 case ENV.fetch('CLARION_STORE', 's3')

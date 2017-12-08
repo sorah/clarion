@@ -56,8 +56,12 @@ module Clarion
         context[:config]
       end
 
+      def base_url
+        conf.app_id || request.base_url
+      end
+
       def u2f
-        @u2f ||= U2F::U2F.new(conf.app_id || request.base_url)
+        @u2f ||= U2F::U2F.new(base_url)
       end
 
       def counter
@@ -71,8 +75,8 @@ module Clarion
       def render_authn_json(authn)
         {
           authn: authn.as_json.merge(
-            url: "#{request.base_url}/api/authn/#{authn.id}",
-            html_url: "#{request.base_url}/authn/#{authn.id}",
+            url: "#{base_url}/api/authn/#{authn.id}",
+            html_url: "#{base_url}/authn/#{authn.id}",
           )
         }.to_json
       end
@@ -286,7 +290,7 @@ module Clarion
       key = conf.options[:register_test_key] ||= OpenSSL::PKey::RSA.generate(2048)
       @name = 'testuser'
       @comment = 'test comment'
-      @register_url = "#{request.base_url}/register"
+      @register_url = "#{base_url}/register"
       @callback =  "#{request.base_url}/test/callback"
       @public_key = [key.public_key.to_der].pack('m*').gsub(/\r?\n/, '')
       @state = SecureRandom.urlsafe_base64(12)
