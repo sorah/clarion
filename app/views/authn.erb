@@ -23,6 +23,9 @@
   #procession.procession_error > div.procession_error {
     display: block;
   }
+  #procession.procession_invalid > div.procession_invalid {
+    display: block;
+  }
   #procession.procession_cancel > div.procession_cancel {
     display: block;
   }
@@ -57,6 +60,8 @@
     <p>Error: Reload and try again?</p>
     <p class='text-muted'><small id='error_message'></small></p>
   </div>
+  <div class="procession_invalid">
+    <p>Error: An unregistered key presented</p>
   </div>
   <div class="procession_cancel">
     <p>Cancelled: You may now close this page.</p>
@@ -64,7 +69,7 @@
   <div class="procession_timeout">
     <p>Timed out...</p>
   </div>
-  <div class="procession_timeout procession_error">
+  <div class="procession_timeout procession_invalid procession_error">
     <p><button id="retry_button">Try again</button></p>
   </div>
   <div class="procession_unsupported procession_error procession_wait procession_timeout">

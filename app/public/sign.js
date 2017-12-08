@@ -58,6 +58,9 @@ document.addEventListener("DOMContentLoaded", function() {
       if (response.errorCode == window.u2f.ErrorCodes.TIMEOUT) {
         processionElem.className = 'procession_timeout';
         return;
+      } else if (response.errorCode == window.u2f.ErrorCodes.DEVICE_INELIGIBLE) {
+        processionElem.className = 'procession_invalid';
+        return;
       } else if (response.errorCode) {
         document.getElementById("error_message").innerHTML = `U2F Client Error ${response.errorCode}`;
         processionElem.className = 'procession_error';
@@ -80,7 +83,11 @@ document.addEventListener("DOMContentLoaded", function() {
         if (!resp.ok) {
           return resp.json().then((json) => {
             console.log(json);
-            processionElem.className = 'procession_error';
+            if (resp.status == 401) {
+              processionElem.className = 'procession_invalid';
+            } else {
+              processionElem.className = 'procession_error';
+            }
           },(jsonErr) => {
             console.log(jsonErr);
             processionElem.className = 'procession_error';
