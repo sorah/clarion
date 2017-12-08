@@ -59,10 +59,11 @@ $stdout.sync = true
 CLARION_URL = ARGV[0]
 
 mode = nil
+mode = :check if ARGV.delete('--check')
 mode = :initiate if ARGV.delete('--initiate')
 mode = :wait if ARGV.delete('--wait')
 unless mode and CLARION_URL
-  abort "Usage: #{$0} {--wait|--initiate} [CLARION_URL]"
+  abort "Usage: #{$0} {--check|--wait|--initiate} [CLARION_URL]"
 end
 
 KEYS_DIR = '/var/cache/pam-u2f/users'
@@ -87,6 +88,8 @@ begin
   keys = JSON.parse(File.read(key_path), symbolize_names: true)
 
   case mode
+  when :check
+    exit 0
   when :initiate
     # Create clarion authn and present URL.
     File.open(state_path, File::RDWR|File::CREAT, 0600) do |io|
@@ -146,7 +149,7 @@ begin
       puts
       puts "--- Send empty password ---"
     end
-    exit 1
+    exit 0
   when :wait
     unless File.exist?(state_path)
       puts "PAM-U2F ERR: state not exist @ #{Socket.gethostname} #{state_path}"
