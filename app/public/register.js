@@ -80,6 +80,7 @@ document.addEventListener("DOMContentLoaded", function() {
         processionElem.className = 'procession_timeout';
         return;
       } else if (response.errorCode) {
+        document.getElementById("error_message").innerHTML = `U2F Client Error ${response.errorCode}`;
         processionElem.className = 'procession_error';
         return;
       }

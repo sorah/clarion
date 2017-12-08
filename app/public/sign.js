@@ -59,6 +59,7 @@ document.addEventListener("DOMContentLoaded", function() {
         processionElem.className = 'procession_timeout';
         return;
       } else if (response.errorCode) {
+        document.getElementById("error_message").innerHTML = `U2F Client Error ${response.errorCode}`;
         processionElem.className = 'procession_error';
         return;
       }
@@ -77,8 +78,15 @@ document.addEventListener("DOMContentLoaded", function() {
       fetch(`/ui/verify/${authnId}`, {credentials: 'include', method: 'POST', body: payload}).then((resp) => {
         console.log(resp);
         if (!resp.ok) {
-          processionElem.className = 'procession_error';
-          return;
+          return resp.json().then((json) => {
+            console.log(json);
+            processionElem.className = 'procession_error';
+          },(jsonErr) => {
+            console.log(jsonErr);
+            processionElem.className = 'procession_error';
+            document.getElementById("error_message").innerHTML = `Error ${resp.status}`;
+            throw jsonErr;
+          });
         }
         return resp.json().then((json) => {
           console.log(json);

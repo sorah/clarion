@@ -243,9 +243,9 @@ module Clarion
           data[:response]
         )
       rescue U2F::Error => e
-        halt 400, {error: "U2F Error: #{e.message}"}.to_json
+        halt 400, {user_error: true, error: "U2F Error: #{e.message}"}.to_json
       rescue Authenticator::InvalidKey => e
-        halt 400, {error: "It is an unregistered key"}.to_json
+        halt 401, {user_error: true, error: "It is an unregistered key"}.to_json
       end
 
       session[:reqs].delete data[:req_id]
