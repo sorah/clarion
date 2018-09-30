@@ -60,6 +60,14 @@ module Clarion
         conf.app_id || request.base_url
       end
 
+      def rp_id
+        conf.rp_id || request.host
+      end
+
+      def legacy_app_id
+        base_url
+      end
+
       def u2f
         @u2f ||= U2F::U2F.new(base_url)
       end
@@ -101,12 +109,12 @@ module Clarion
         halt 410, "Authn already processed"
       end
 
-      authenticator = Authenticator.new(@authn, u2f, counter, store)
-      @app_id, @requests, @challenge = authenticator.request
+      authenticator = Authenticator.new(@authn, counter, store, rp_id: rp_id, legacy_app_id: legacy_app_id)
+      @credential_request_options = authenticator.credential_request_options
 
       @req_id = SecureRandom.urlsafe_base64(12)
       session[:reqs] ||= {}
-      session[:reqs][@req_id] = {challenge: @challenge}
+      session[:reqs][@req_id] = {challenge: authenticator.challenge}
 
       erb :authn
     end
@@ -216,7 +224,7 @@ module Clarion
 
     post '/ui/verify/:id' do
       content_type :json
-      unless data[:req_id] && data[:response]
+      unless data[:req_id] && data[:authenticator_data] && data[:client_data_json] && data[:signature] && data[:credential_id]
         halt 400, '{"error": "missing params"}'
       end
       session[:reqs] ||= {}
@@ -239,16 +247,23 @@ module Clarion
         halt 410, '{"error": "authn already processed"}'
       end
 
-      authenticator = Authenticator.new(@authn, u2f, counter, store)
+      authenticator = Authenticator.new(@authn, counter, store, rp_id: rp_id, legacy_app_id: legacy_app_id)
 
       begin
         authenticator.verify!(
-          challenge,
-          data[:response]
+          challenge: challenge,
+          origin: request.base_url,
+          credential_id: data[:credential_id],
+          authenticator_data: data[:authenticator_data].unpack('m*')[0],
+          client_data_json: data[:client_data_json].unpack('m*')[0],
+          signature: data[:signature].unpack('m*')[0],
         )
-      rescue U2F::Error => e
-        halt 400, {user_error: true, error: "U2F Error: #{e.message}"}.to_json
+        logger.info "authn verified (#{@authn.id}) with credential_id=#{data[:credential_id]}"
+      rescue Authenticator::InvalidAssertion => e
+        logger.warn "authn verify error (#{@authn.id}; credential_id=#{data[:credential_id]}): #{e.inspect}"
+        halt 400, {user_error: true, error: "Invalid assertion"}.to_json
       rescue Authenticator::InvalidKey => e
+        logger.warn "authn verify error (#{@authn.id}; credential_id=#{data[:credential_id]}): #{e.inspect}"
         halt 401, {user_error: true, error: "It is an unregistered key"}.to_json
       end
 

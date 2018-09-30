@@ -21,6 +21,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "u2f"
+  spec.add_dependency "webauthn"
   spec.add_dependency "sinatra"
   spec.add_dependency "erubis"
   spec.add_dependency "aws-sdk-s3"

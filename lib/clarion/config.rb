@@ -36,6 +36,10 @@ module Clarion
       @options[:app_id]
     end
 
+    option def rp_id
+      @options[:rp_id]
+    end
+
     option def store
       @store ||= Clarion::Stores.find(@options.fetch(:store).fetch(:kind)).new(store_options)
     end
