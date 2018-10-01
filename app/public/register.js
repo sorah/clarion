@@ -1,105 +1,109 @@
 "use strict";
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", async function() {
   let processionElem = document.getElementById("procession");
 
   let handleUnsupported = () => {
     processionElem.className = 'procession_unsupported';
   };
-  let unsupportedTimer = setTimeout(handleUnsupported, 3000);
+  if (!navigator.credentials) return handleUnsupported();
 
-  window.u2f.getApiVersion((ver) => {
-    console.log(ver);
-    clearTimeout(unsupportedTimer);
-    let appId = processionElem.attributes['data-app-id'].value;
-    let regId = processionElem.attributes['data-reg-id'].value;
-    let requests = JSON.parse(processionElem.attributes['data-requests'].value);
-    let state = processionElem.attributes['data-state'].value;
-    let callbackUrl = processionElem.attributes['data-callback'].value;
+  const regId = processionElem.attributes['data-reg-id'].value;
+  const state = processionElem.attributes['data-state'].value;
+  const callbackUrl = processionElem.attributes['data-callback'].value;
 
-    var u2fResponse;
+  const creationOptions = JSON.parse(processionElem.attributes['data-webauthn-creation'].value);
+  creationOptions.publicKey.challenge = new Uint8Array(creationOptions.publicKey.challenge).buffer;
+  creationOptions.publicKey.user.id = new Uint8Array(creationOptions.publicKey.user.id).buffer;
+  console.log(creationOptions);
 
-    let processCallback = (json) => {
-      processionElem.className = 'procession_ok';
+  let attestation;
 
-      if (callbackUrl.match(/^js:/)) {
-        if (!window.opener) {
-          console.log("window.opener is not truthy")
-          processionElem.className = 'procession_error';
+  const startCreationRequest = async function() {
+    processionElem.className = 'procession_wait';
+
+    try {
+      attestation = await navigator.credentials.create(creationOptions);
+      console.log(attestation);
+    } catch (e) {
+      document.getElementById("error_message").innerHTML = `WebAuthn (${e.toString()})`;
+      processionElem.className = 'procession_error';
+      console.log(e);
+
+      if (e instanceof DOMException) {
+        if (e.name == 'NotAllowedError' || e.name == 'AbortError') {
+          processionElem.className = 'procession_timeout';
           return;
         }
-        window.opener.postMessage({clarion_key: {state: state, name: json.name, data: json.encrypted_key}}, callbackUrl.slice(3));
-        window.close();
-      } else {
-        let form = document.getElementById("callback_form");
-        form.action = callbackUrl;
-        form.querySelector('[name=data]').value = json.encrypted_key;
-        form.submit();
+        if (e.name == 'NotSupportedError') {
+          handleUnsupported();
+          return;
+        }
       }
+      return;
     }
 
-    let submitKey = () => {
-      processionElem.className = 'procession_contact';
+    processionElem.className = 'procession_edit';
+    document.getElementById("key_name").focus();
+  };
 
-      let payload = JSON.stringify({
-        reg_id: regId,
-        response: JSON.stringify(u2fResponse),
-        name: document.getElementById("key_name").value,
-      });
+  const submitAttestation = async function() {
+    processionElem.className = 'procession_contact';
 
-      let handleError = (err) => {
-        console.log(err);
-        processionElem.className = 'procession_error';
-      };
-
-      fetch(`/ui/register`, {credentials: 'include', method: 'POST', body: payload}).then((resp) => {
-        console.log(resp);
-        if (!resp.ok) {
-          processionElem.className = 'procession_error';
-          return;
-        }
-        return resp.json().then((json) => {
-          console.log(json);
-          if (json.ok) {
-            processCallback(json);
-          } else {
-            processionElem.className = 'procession_error';
-          }
-        });
-      }).catch(handleError);
-    };
-    document.getElementById("key_name_form").addEventListener("submit", (e) => {
-      e.preventDefault();
-      if (u2fResponse) submitKey();
+    const b64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf)));
+    const payload = JSON.stringify({
+      reg_id: regId,
+      name: document.getElementById("key_name").value,
+      attestation_object: b64(attestation.response.attestationObject),
+      client_data_json: b64(attestation.response.clientDataJSON),
     });
-
-    let u2fCallback = (response) => {
-      console.log(response);
-
-      if (response.errorCode == window.u2f.ErrorCodes.TIMEOUT) {
-        processionElem.className = 'procession_timeout';
-        return;
-      } else if (response.errorCode) {
-        document.getElementById("error_message").innerHTML = `U2F Client Error ${response.errorCode}`;
+    try {
+      const resp = await fetch(`/ui/register`, {credentials: 'include', method: 'POST', body: payload});
+      console.log(resp);
+      if (!resp.ok) {
         processionElem.className = 'procession_error';
         return;
       }
-      u2fResponse = response;
-      processionElem.className = 'procession_edit';
-      document.getElementById("key_name").focus();
+
+      const json = await resp.json();
+      console.log(json);
+      if (json.ok) {
+        processCallback(json);
+      } else {
+        processionElem.className = 'procession_error';
+      }
+    } catch (e) {
+      console.log(e);
+      processionElem.className = 'procession_error';
     };
+  };
 
-    let startRequest = () => {
-      processionElem.className = 'procession_wait';
-      window.u2f.register(appId, requests, [], u2fCallback);
-    };
-
-    document.getElementById("retry_button").addEventListener("click", (e) => {
-      startRequest();
-    });
-
-    startRequest();
+  document.getElementById("key_name_form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (attestation) submitAttestation();
   });
 
+  const processCallback = function (json) {
+    processionElem.className = 'procession_ok';
 
+    if (callbackUrl.match(/^js:/)) {
+      if (!window.opener) {
+        console.log("window.opener is not truthy")
+        processionElem.className = 'procession_error';
+        return;
+      }
+      window.opener.postMessage({clarion_key: {state: state, name: json.name, data: json.encrypted_key}}, callbackUrl.slice(3));
+      window.close();
+    } else {
+      let form = document.getElementById("callback_form");
+      form.action = callbackUrl;
+      form.querySelector('[name=data]').value = json.encrypted_key;
+      form.submit();
+    }
+  };
+
+  document.getElementById("retry_button").addEventListener("click", (e) => {
+    startCreationRequest();
+  });
+  return startCreationRequest();
 });

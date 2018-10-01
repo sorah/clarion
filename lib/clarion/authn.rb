@@ -77,10 +77,16 @@ module Clarion
       keys.find { |_| _.handle == handle }
     end
 
-    def verify(key, verified_at: Time.now)
-      unless key_for_handle(key.handle)
-        return false
+    def verify_by_handle(handle, verified_at: Time.now)
+      key = key_for_handle(handle)
+      unless key
+        return nil
       end
+      verify(key)
+      return key
+    end
+
+    def verify(key, verified_at: Time.now)
       @verified_at = verified_at
       @verified_key = key
       @status = :verified

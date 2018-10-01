@@ -26,18 +26,21 @@ module Clarion
       new(**key)
     end
 
-    def initialize(handle:, name: nil, public_key: nil, counter: nil)
+    def initialize(handle:, type: 'fido-legacy', name: nil, public_key: nil, counter: nil, user_handle: nil)
+      @type = type
       @handle = handle
+      @user_handle = user_handle
       @name = name
       @public_key = public_key
       @counter = counter
     end
 
-    attr_reader :handle, :public_key
+    attr_reader :type, :handle, :public_key, :user_handle
     attr_accessor :counter, :name
 
     def to_h(all=false)
       {
+        type: type,
         handle: handle,
       }.tap do |h|
         h[:name] = name if name
@@ -46,6 +49,10 @@ module Clarion
           h[:public_key] = public_key if public_key
         end
       end
+    end
+
+    def public_key_bytes
+      public_key.unpack('m*')[0]
     end
 
     def to_json(*args)

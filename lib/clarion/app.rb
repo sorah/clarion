@@ -1,6 +1,5 @@
 require 'erubis'
 require 'sinatra/base'
-require 'u2f'
 require 'securerandom'
 
 require 'clarion/registrator'
@@ -60,8 +59,12 @@ module Clarion
         conf.app_id || request.base_url
       end
 
-      def u2f
-        @u2f ||= U2F::U2F.new(base_url)
+      def rp_id
+        conf.rp_id || request.host
+      end
+
+      def legacy_app_id
+        base_url
       end
 
       def counter
@@ -101,12 +104,12 @@ module Clarion
         halt 410, "Authn already processed"
       end
 
-      authenticator = Authenticator.new(@authn, u2f, counter, store)
-      @app_id, @requests, @challenge = authenticator.request
+      authenticator = Authenticator.new(@authn, counter, store, rp_id: rp_id, legacy_app_id: legacy_app_id)
+      @credential_request_options = authenticator.credential_request_options
 
       @req_id = SecureRandom.urlsafe_base64(12)
       session[:reqs] ||= {}
-      session[:reqs][@req_id] = {challenge: @challenge}
+      session[:reqs][@req_id] = {challenge: authenticator.challenge}
 
       erb :authn
     end
@@ -134,19 +137,22 @@ module Clarion
       end
 
       @reg_id = SecureRandom.urlsafe_base64(12)
-      registrator = Registrator.new(u2f, counter)
-      @app_id, @requests = registrator.request
+      @name = params[:name]
+      # TODO: Give proper user_handle
+      registrator = Registrator.new(counter, rp_id: rp_id, rp_name: "Clarion: #{request.host}", display_name: @name)
+      @credential_creation_options = registrator.credential_creation_options
+
       session[:regis] ||= []
       session[:regis] << {
         id: @reg_id,
-        challenges: @requests.map(&:challenge),
+        challenge: registrator.challenge,
+        user_handle: registrator.user_handle,
         key: public_key.to_der,
       }
       session[:regis].shift(session[:regis].size - 4) if session[:regis].size > 4
 
       @callback = params[:callback]
       @state = params[:state]
-      @name = params[:name]
       @comment = params[:comment]
       erb :register
     end
@@ -157,13 +163,13 @@ module Clarion
 
     post '/ui/register' do
       content_type :json
-      unless data[:reg_id] && data[:response]
+      unless data[:reg_id] && data[:attestation_object] && data[:client_data_json]
         halt 400, '{"error": "Missing params"}'
       end
 
       session[:regis] ||= []
       reg = session[:regis].find { |_| _[:id] == data[:reg_id] }
-      unless reg && reg[:challenges] && reg[:key]
+      unless reg && reg[:challenge] && reg[:user_handle] && reg[:key]
         halt 400, '{"error": "Invalid :reg"}'
       end
 
@@ -173,8 +179,18 @@ module Clarion
         halt 400, '{"error": "Invalid public key"}'
       end
 
-      registrator = Registrator.new(u2f, counter)
-      key = registrator.register!(reg[:challenges], data[:response])
+      registrator = Registrator.new(counter, rp_id: rp_id, user_handle: reg[:user_handle])
+      begin
+        key = registrator.register!(
+          challenge: reg[:challenge],
+          origin: request.base_url,
+          attestation_object: data[:attestation_object].unpack('m*')[0],
+          client_data_json: data[:client_data_json].unpack('m*')[0],
+        )
+      rescue Registrator::InvalidAttestation => e
+        logger.warn "invalid attestation error: #{e.inspect}"
+        halt 400, {user_error: true, error: "Invalid attestation"}.to_json
+      end
       key.name = data[:name]
 
       session[:regis].reject! { |_| _[:id] == data[:reg_id] }
@@ -216,7 +232,7 @@ module Clarion
 
     post '/ui/verify/:id' do
       content_type :json
-      unless data[:req_id] && data[:response]
+      unless data[:req_id] && data[:authenticator_data] && data[:client_data_json] && data[:signature] && data[:credential_id]
         halt 400, '{"error": "missing params"}'
       end
       session[:reqs] ||= {}
@@ -239,16 +255,23 @@ module Clarion
         halt 410, '{"error": "authn already processed"}'
       end
 
-      authenticator = Authenticator.new(@authn, u2f, counter, store)
+      authenticator = Authenticator.new(@authn, counter, store, rp_id: rp_id, legacy_app_id: legacy_app_id)
 
       begin
         authenticator.verify!(
-          challenge,
-          data[:response]
+          challenge: challenge,
+          origin: request.base_url,
+          credential_id: data[:credential_id],
+          authenticator_data: data[:authenticator_data].unpack('m*')[0],
+          client_data_json: data[:client_data_json].unpack('m*')[0],
+          signature: data[:signature].unpack('m*')[0],
         )
-      rescue U2F::Error => e
-        halt 400, {user_error: true, error: "U2F Error: #{e.message}"}.to_json
+        logger.info "authn verified (#{@authn.id}) with credential_id=#{data[:credential_id]}"
+      rescue Authenticator::InvalidAssertion => e
+        logger.warn "authn verify error (#{@authn.id}; credential_id=#{data[:credential_id]}): #{e.inspect}"
+        halt 400, {user_error: true, error: "Invalid assertion"}.to_json
       rescue Authenticator::InvalidKey => e
+        logger.warn "authn verify error (#{@authn.id}; credential_id=#{data[:credential_id]}): #{e.inspect}"
         halt 401, {user_error: true, error: "It is an unregistered key"}.to_json
       end
 

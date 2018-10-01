@@ -26,6 +26,9 @@
   #procession.procession_invalid > div.procession_invalid {
     display: block;
   }
+  #procession.procession_unambiguous > div.procession_invalid {
+    display: block;
+  }
   #procession.procession_cancel > div.procession_cancel {
     display: block;
   }
@@ -40,7 +43,7 @@
 <small><%= @authn.comment %></small></p>
 <%- end -%>
 </p>
-<div id="procession" class="procession_init" data-authn-id="<%= @authn.id %>" data-app-id="<%= @app_id %>" data-requests='<%= @requests.to_json %>' data-challenge='<%= @challenge.to_json %>' data-req-id='<%= @req_id %>'>
+<div id="procession" class="procession_init" data-authn-id="<%= @authn.id %>" data-req-id='<%= @req_id %>' data-webauthn-request='<%= @credential_request_options.to_json %>'>
   <div class="procession_init">
     <p>Initializing...</p>
   </div>
@@ -57,17 +60,21 @@
     <p>OK: You may now close this page.</p>
   </div>
   <div class="procession_error">
-    <p>Error: Reload and try again?</p>
+    <p>Unexpected Error: Reload and try again?</p>
     <p class='text-muted'><small id='error_message'></small></p>
   </div>
   <div class="procession_invalid">
     <p>Error: An unregistered key presented</p>
   </div>
+  <div class="procession_unambiguous">
+    <p>Error: Key Selection was unambigious<p>
+  </div>
+
   <div class="procession_cancel">
     <p>Cancelled: You may now close this page.</p>
   </div>
   <div class="procession_timeout">
-    <p>Timed out...</p>
+    <p>Error: The operation interrupted or timed out<p>
   </div>
   <div class="procession_timeout procession_invalid procession_error">
     <p><button id="retry_button">Try again</button></p>
