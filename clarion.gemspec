@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Sorah Fukumori"]
   spec.email         = ["sorah@cookpad.com"]
 
-  spec.summary       = %q{Web-based FIDO U2F Helper for CLI operations (SSH login...)}
+  spec.summary       = %q{Web-based WebAuthn (U2F) Helper for CLI operations (SSH login...)}
   spec.homepage      = "https://github.com/sorah/clarion"
   spec.license       = "MIT"
 
@@ -20,7 +20,6 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "u2f"
   spec.add_dependency "webauthn"
   spec.add_dependency "sinatra"
   spec.add_dependency "erubis"

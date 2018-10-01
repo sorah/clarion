@@ -1,6 +1,5 @@
 require 'erubis'
 require 'sinatra/base'
-require 'u2f'
 require 'securerandom'
 
 require 'clarion/registrator'
@@ -66,10 +65,6 @@ module Clarion
 
       def legacy_app_id
         base_url
-      end
-
-      def u2f
-        @u2f ||= U2F::U2F.new(base_url)
       end
 
       def counter
