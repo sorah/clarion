@@ -36,6 +36,11 @@ module WebAuthn
     public :authenticator_data
   end
 
+  class AuthenticatorAttestationResponse
+    # To expose sign_count
+    public :authenticator_data
+  end
+
   class AuthenticatorResponse
     # Providing the proper origin name and RP ID is the application's responsibility. And, RP ID and client origin is different concept: https://w3c.github.io/webauthn/#api
     # There's no expectation of use of different RP ID which is separately from request origin, and appid extension.

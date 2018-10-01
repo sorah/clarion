@@ -26,15 +26,16 @@ module Clarion
       new(**key)
     end
 
-    def initialize(handle:, type: 'fido-legacy', name: nil, public_key: nil, counter: nil)
+    def initialize(handle:, type: 'fido-legacy', name: nil, public_key: nil, counter: nil, user_handle: nil)
       @type = type
       @handle = handle
+      @user_handle = user_handle
       @name = name
       @public_key = public_key
       @counter = counter
     end
 
-    attr_reader :type, :handle, :public_key
+    attr_reader :type, :handle, :public_key, :user_handle
     attr_accessor :counter, :name
 
     def to_h(all=false)
