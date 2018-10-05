@@ -54,7 +54,7 @@ module Clarion
         raise Authenticator::InvalidKey
       end
 
-      rp_id = extension_results&.fetch('appid', false) ? legacy_app_id : self.rp_id()
+      rp_id = extension_results&.fetch('appid', extension_results&.fetch(:appid, false)) ? legacy_app_id : self.rp_id()
       allowed_credentials = authn.keys.map { |_|  {id: _.handle, public_key: _.public_key_bytes} }
       unless assertion.valid?(challenge, origin, rp_id: rp_id, allowed_credentials: allowed_credentials)
         raise Authenticator::InvalidAssertion, "invalid assertion"

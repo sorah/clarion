@@ -262,6 +262,7 @@ module Clarion
           challenge: challenge,
           origin: request.base_url,
           credential_id: data[:credential_id],
+          extension_results: data[:extension_results] || {},
           authenticator_data: data[:authenticator_data].unpack('m*')[0],
           client_data_json: data[:client_data_json].unpack('m*')[0],
           signature: data[:signature].unpack('m*')[0],
