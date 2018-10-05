@@ -50,13 +50,9 @@ module Clarion
         client_data_json: client_data_json
       )
 
-      unless attestation.valid?(challenge, rp_id)
+      unless attestation.valid?(challenge, origin, rp_id: rp_id)
         raise InvalidAttestation, "invalid attestation"
       end
-      unless origin == attestation.client_data.origin
-        raise InvalidAttestation, "invalid origin"
-      end
-
 
       key = Key.new(
         type: 'webauthn',

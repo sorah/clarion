@@ -3,8 +3,6 @@ require 'webauthn'
 require 'securerandom'
 require 'base64'
 
-require 'clarion/webauthn_ext'
-
 module Clarion
   class Authenticator
     class Error < StandardError; end
@@ -58,12 +56,8 @@ module Clarion
 
       rp_id = extension_results&.fetch('appid', false) ? legacy_app_id : self.rp_id()
       allowed_credentials = authn.keys.map { |_|  {id: _.handle, public_key: _.public_key_bytes} }
-      unless assertion.valid?(challenge, rp_id, allowed_credentials: allowed_credentials)
+      unless assertion.valid?(challenge, origin, rp_id: rp_id, allowed_credentials: allowed_credentials)
         raise Authenticator::InvalidAssertion, "invalid assertion"
-      end
-      # We perform origin validation on our side (see webauthn_ext.rb)
-      unless origin == assertion.client_data.origin
-        raise Authenticator::InvalidAssertion, "invalid origin"
       end
 
       sign_count = assertion.authenticator_data.sign_count
