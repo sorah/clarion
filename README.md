@@ -1,4 +1,4 @@
-# Clarion: Web-based FIDO U2F helper for CLI operations (e.g. SSH Log in)
+# Clarion: WebAuthn helper for CLI operations (e.g. SSH Log in)
 
 ![](https://img.sorah.jp/s/ssh-u2f.gif)
 
@@ -9,9 +9,9 @@ Clarion is a web-based frontend to allow remote,non-browser operations (CLI) to 
 Any software/scripts want to perform 2FA _(app)_ creates _a request_ on Clarion. Then _app_ requests user to visit a request specific path on Clarion.
 Clarion then performs 2FA on behalf of _app,_ and finally returns an authentication result to _app._
 
-Clarion also provides a way to retrieve user's U2F keyhandle and public key.
+Clarion also provides a way to retrieve user's key handle and public key.
 
-Note that Clarion itself doesn't manage users' keyhandle and public key. User information should be provided every time when requesting authentication.
+Note that Clarion itself doesn't manage users' key handle and public key. User information should be provided every time when requesting authentication.
 
 ## Set up
 
