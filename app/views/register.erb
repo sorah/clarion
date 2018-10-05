@@ -26,6 +26,8 @@
   #procession.procession_timeout > div.procession_timeout {
     display: block;
   }
+  #force_platform_link { display: none; }
+  body.platform-authenticator-available #force_platform_link { display: inline; }
 </style>
 
 <p><strong>U2F key registration<%- if @name -%> for <%= @name %><%- end -%></strong></p>
@@ -42,6 +44,7 @@
   </div>
   <div class="procession_wait">
     <p>Insert and tap your security key.</p>
+    <p class='right'><a href='#' id="force_platform_link" class='text-muted'><small>Force platform authenticator (May enable Touch ID)</small></a></p>
   </div>
   <div class="procession_edit">
     <p>Security key recognized:</p>

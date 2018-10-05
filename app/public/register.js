@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     processionElem.className = 'procession_unsupported';
   };
   if (!navigator.credentials) return handleUnsupported();
+  if (!window.PublicKeyCredential) return handleUnsupported();
 
   const regId = processionElem.attributes['data-reg-id'].value;
   const state = processionElem.attributes['data-state'].value;
@@ -18,6 +19,25 @@ document.addEventListener("DOMContentLoaded", async function() {
   console.log(creationOptions);
 
   let attestation;
+
+  // "Force platform authenticator" link; This is especially for Chrome 70 Touch ID support.
+  // Until the WebAuthn dialog https://crbug.com/847985 is rolled out, the platform authenticators are needed to be chosen
+  // explicitly to enable Touch ID authenticator.
+  if (window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
+    const platformAuthenticatorAvailability = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    if (platformAuthenticatorAvailability && location.hash == '#platform') {
+      creationOptions.publicKey.authenticatorSelection = {authenticatorAttachment: 'platform'};
+    } else if (platformAuthenticatorAvailability) {
+      document.querySelector('#force_platform_link').addEventListener('click', function(e) {
+        e.target.remove();
+        e.preventDefault();
+        // https://crbug.com/803833
+        location.hash = '#platform';
+        location.reload();
+      });
+      document.body.classList.add('platform-authenticator-available');
+    }
+  }
 
   const startCreationRequest = async function() {
     processionElem.className = 'procession_wait';
