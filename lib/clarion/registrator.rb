@@ -30,7 +30,9 @@ module Clarion
           # Convert to ArrayBuffer in register.js
           challenge: challenge.each_byte.map(&:ord),
           attestation: 'none',
-          pubKeyCredParams: [WebAuthn::CRED_PARAM_ES256],
+          pubKeyCredParams: WebAuthn.configuration.algorithms.map do |alg|
+            { type: 'public-key', alg: COSE::Algorithm.by_name(alg).id }
+          end,
           rp: {
             name: rp_name,
           },
