@@ -30,7 +30,7 @@ module Clarion
             key: authn_s3_key(id),
           ).body.read
         rescue Aws::S3::Errors::NoSuchKey, Aws::S3::Errors::AccessDenied
-          if retry_count < retry_max
+          if retry_count < @retry_max
             sleep @retry_interval
             retry_count += 1
             retry
