@@ -41,7 +41,7 @@ module Clarion
     end
 
     option def store
-      @store ||= Clarion::Stores.find(@options.fetch(:store).fetch(:kind)).new(store_options)
+      @store ||= Clarion::Stores.find(@options.fetch(:store).fetch(:kind)).new(**store_options)
     end
 
     def store_options
@@ -50,7 +50,7 @@ module Clarion
 
     option def counter
       if @options[:counter]
-        @counter ||= Clarion::Counters.find(@options.fetch(:counter).fetch(:kind)).new(counter_options)
+        @counter ||= Clarion::Counters.find(@options.fetch(:counter).fetch(:kind)).new(**counter_options)
       end
     end
 
