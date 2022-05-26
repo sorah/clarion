@@ -61,7 +61,7 @@ module Clarion
         handle: Base64.urlsafe_encode64(attestation.credential.id).gsub(/\r?\n|=+/,''),
         user_handle: user_handle,
         public_key: Base64.encode64(attestation.credential.public_key).gsub(/\r?\n/,''),
-        counter: attestation.authenticator_data.sign_count,
+        counter: attestation.authenticator_data.sign_count.to_i,
       )
       if counter
         counter.store(key)

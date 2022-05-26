@@ -60,7 +60,7 @@ module Clarion
         raise Authenticator::InvalidAssertion, "invalid assertion"
       end
 
-      sign_count = assertion.authenticator_data.sign_count
+      sign_count = assertion.authenticator_data.sign_count.to_i
       last_sign_count = counter ? counter.get(key) : 0
 
       if last_sign_count > 0 && sign_count <= last_sign_count
