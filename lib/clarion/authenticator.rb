@@ -43,7 +43,6 @@ module Clarion
 
     def verify!(challenge: self.challenge(), origin:, extension_results: {}, credential_id:, authenticator_data:, client_data_json:, signature:)
       assertion = WebAuthn::AuthenticatorAssertionResponse.new(
-        credential_id: credential_id,
         authenticator_data: authenticator_data,
         client_data_json: client_data_json,
         signature: signature,
@@ -55,8 +54,9 @@ module Clarion
       end
 
       rp_id = extension_results&.fetch('appid', extension_results&.fetch(:appid, false)) ? legacy_app_id : self.rp_id()
-      allowed_credentials = authn.keys.map { |_|  {id: _.handle, public_key: _.public_key_bytes} }
-      unless assertion.valid?(challenge, origin, rp_id: rp_id, allowed_credentials: allowed_credentials)
+
+      # TODO: move sign_count verification to webauthn-ruby
+      unless assertion.valid?(challenge, origin, rp_id: rp_id, public_key: key.public_key_bytes, sign_count: false)
         raise Authenticator::InvalidAssertion, "invalid assertion"
       end
 

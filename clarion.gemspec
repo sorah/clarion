@@ -1,4 +1,3 @@
-
 lib = File.expand_path("../lib", __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require "clarion/version"
@@ -20,7 +19,7 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "webauthn", '< 2'
+  spec.add_dependency "webauthn", '>= 2.0.0'
   spec.add_dependency "sinatra"
   spec.add_dependency "erubis"
   spec.add_dependency "aws-sdk-s3"
