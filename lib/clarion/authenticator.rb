@@ -63,8 +63,8 @@ module Clarion
       sign_count = assertion.authenticator_data.sign_count
       last_sign_count = counter ? counter.get(key) : 0
 
-      if sign_count <= last_sign_count
-        raise Authenticator::InvalidAssertion, "sign_count is decreased"
+      if last_sign_count > 0 && sign_count <= last_sign_count
+        raise Authenticator::InvalidAssertion, "sign_count can't decrease"
       end
 
       key.counter = sign_count
